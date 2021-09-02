@@ -1,42 +1,32 @@
-/**
- * Quasar App Extension prompts script
- *
- * Docs: https://quasar.dev/app-extensions/development-guide/prompts-api
- *
- * Inquirer prompts
- * (answers are available as "api.prompts" in the other scripts)
- * https://www.npmjs.com/package/inquirer#question
- *
- * Example:
-
- return [
- {
-      name: 'name',
+export = function () {
+  return [
+    {
+      name: 'server_graphql_base_url',
       type: 'input',
       required: true,
-      message: 'Quasar CLI Extension name (without prefix)',
+      message: 'URL for Graphql server',
+      default: 'http://localhost'
     },
- {
-      name: 'preset',
-      type: 'checkbox',
-      message: 'Check the features needed for your project:',
-      choices: [
-        {
-          name: 'Install script',
-          value: 'install'
-        },
-        {
-          name: 'Prompts script',
-          value: 'prompts'
-        },
-        {
-          name: 'Uninstall script',
-          value: 'uninstall'
-        }
-      ]
+    {
+      name: 'server_graphql_base_url_subscription',
+      type: 'input',
+      required: true,
+      message: 'URL for Graphql subscription',
+      default: 'wss://localhost'
+    },
+    {
+      name: 'vuex_getters_token',
+      type: 'input',
+      required: true,
+      message: 'Vuex getter token information',
+      default: 'rxdb/getToken'
+    },
+    {
+      name: 'vuex_getters_db_name',
+      type: 'input',
+      required: true,
+      message: 'Vuex getter db name information',
+      default: 'rxdb/getDbName'
     }
- ]
- */
-export = function () {
-    return []
+  ]
 }
