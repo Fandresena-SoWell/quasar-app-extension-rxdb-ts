@@ -1,4 +1,4 @@
-import { RxDocument } from "rxdb";
+import { RxDocument } from 'rxdb'
 
 interface QueryBuilderResult {
   query: string,
