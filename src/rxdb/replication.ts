@@ -1,17 +1,13 @@
 import {
   createRxDatabase,
-  addRxPlugin,
-  addPouchPlugin,
   getRxStoragePouch,
   RxDatabase,
-  RxSchema,
   RxCollectionCreator,
   RxJsonSchema,
   RxCollection
 } from 'rxdb'
 
-import { Store, useStore } from "vuex"
-import { inject } from "vue"
+import { useStore } from "vuex"
 import { Notify } from "quasar"
 
 import { PromptsInterface } from '../injects/prompts'
@@ -76,6 +72,24 @@ export default class RxDBExtension {
         badgeStyle: "display:none"
       })
       throw Error(t("rxdb.createDbError"))
+    }
+  }
+
+  public getCollection (name?: string): RxCollection | undefined {
+    if (name !== undefined) {
+      if (name !== null && this.collections.hasOwnProperty(name)) {
+        const collection = this.collections[name]
+        return collection
+      } else {
+        Notify.create({
+          message: t("rxdb.getCollectionError"),
+          position: "top",
+          type: "negative",
+          textColor: "white",
+          badgeStyle: "display:none"
+        })
+        throw Error(t("rxdb.getCollectionError"))
+      }
     }
   }
 }
