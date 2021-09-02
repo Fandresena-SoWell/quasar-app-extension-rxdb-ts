@@ -1,4 +1,6 @@
-export = function () {
+import PromptConfig from './interfaces/PromptConfig'
+
+export = function () : PromptConfig[] {
   return [
     {
       name: 'server_graphql_base_url',

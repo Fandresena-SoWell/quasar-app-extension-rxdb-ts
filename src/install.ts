@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * Quasar App Extension install script
  *

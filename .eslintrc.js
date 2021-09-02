@@ -30,13 +30,7 @@ module.exports = {
     'plugin:@typescript-eslint/eslint-recommended',
     'plugin:@typescript-eslint/recommended',
     // consider disabling this class of rules if linting takes too long
-    'plugin:@typescript-eslint/recommended-requiring-type-checking',
-
-    // --- ONLY WHEN USING PRETTIER ---
-    // https://github.com/prettier/eslint-config-prettier#installation
-    // usage with Prettier, provided by 'eslint-config-prettier'.
-    'prettier',
-    'prettier/@typescript-eslint'
+    'plugin:@typescript-eslint/recommended-requiring-type-checking'
   ],
 
   plugins: [

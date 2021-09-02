@@ -1,13 +1,7 @@
 import { inject } from "vue"
+import PromptsInterface from "../interfaces/PromptsInterface"
 
-export interface PromptsInterface {
-  server_graphql_base_url: string,
-  server_graphql_base_url_subscription: string,
-  vuex_getters_token: string,
-  vuex_getters_db_name: string
-}
-
-export default () => {
+export default () : PromptsInterface => {
   const prompts = inject<Record<"@sowell/rxdb", PromptsInterface>>("prompts")
   if (prompts == undefined) {
     throw Error("Could not inject prompts")

@@ -10,23 +10,25 @@ import {
 import { useStore } from "vuex"
 import { Notify } from "quasar"
 
-import { PromptsInterface } from '../injects/prompts'
-const prompts: PromptsInterface = require('../injects/prompts')
+import QueryBuilder from '../interfaces/queryBuilder'
+import Dictionary from '../interfaces/Dictionary'
+import PromptsInterface from '../interfaces/PromptsInterface'
+
 const i18n = require('../injects/i18n')
 const {
   global: { t }
 } = i18n()
 
+const prompts: () => PromptsInterface = require('../injects/prompts')
+
 const store = useStore()
 
-import QueryBuilder from '../interfaces/queryBuilder'
-import Dictionary from '../interfaces/Dictionary'
 
 export default class RxDBExtension {
   private queryBuilders: QueryBuilder[]
   private schema: Dictionary<RxJsonSchema<any>>
   private x_hasura_role: string
-  private localDB: RxDatabase<any>
+  private localDB?: RxDatabase<Dictionary<RxCollection>>
   private collections: Dictionary<RxCollection> = {} // NOT SO SURE ABOUT THIS TYPING
   private collectionsName: string[] = []
 
@@ -37,10 +39,10 @@ export default class RxDBExtension {
   }
 
   public async createDB (): Promise<RxDatabase<any>> {
-    const { vuex_getters_db_name } = prompts
+    const { vuex_getters_db_name } = prompts()
     const name = store.getters[vuex_getters_db_name]
     if (name) {
-      if (this.localDB === null) {
+      if (this.localDB === undefined) {
         console.log("DatabaseService: creating database..")
         const database = await createRxDatabase({
           name: `sw_${name}`,
@@ -50,14 +52,14 @@ export default class RxDBExtension {
         console.log("DatabaseService: created database")
 
         // Add name and create collection
-        const obj: Dictionary<RxCollectionCreator> = {}
+        const collections: Dictionary<RxCollectionCreator> = {}
         Object.entries(this.schema).forEach(async ([key, value]) => {
-          obj[key] = {
+          collections[key] = {
             schema: value
           }
           this.collectionsName.push(key)
         })
-        this.collections = await database.addCollections(obj)
+        this.collections = await database.addCollections(collections)
         this.localDB = database
         return database
       } else {
@@ -76,7 +78,7 @@ export default class RxDBExtension {
   }
 
   public getDB (): RxDatabase {
-    if (this.localDB !== null) {
+    if (this.localDB !== undefined) {
       return this.localDB
     } else {
       Notify.create({
