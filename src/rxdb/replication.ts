@@ -75,6 +75,21 @@ export default class RxDBExtension {
     }
   }
 
+  public getDB (): RxDatabase {
+    if (this.localDB !== null) {
+      return this.localDB
+    } else {
+      Notify.create({
+        message: t("rxdb.getDBError"),
+        position: "top",
+        type: "negative",
+        textColor: "white",
+        badgeStyle: "display:none"
+      })
+      throw Error(t("rxdb.getDBError"))
+    }
+  }
+
   public getCollection (name?: string): RxCollection | undefined {
     if (name !== undefined) {
       if (name !== null && this.collections.hasOwnProperty(name)) {
