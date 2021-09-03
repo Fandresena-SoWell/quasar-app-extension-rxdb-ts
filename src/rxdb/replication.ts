@@ -10,7 +10,7 @@ import {
 import { Store, useStore } from 'vuex'
 import { Notify } from 'quasar'
 
-import QueryBuilder from '../interfaces/queryBuilder'
+import QueryBuilder from '../interfaces/QueryBuilder'
 import Dictionary from '../interfaces/Dictionary'
 
 import i18n from '../injects/i18n'
@@ -71,40 +71,6 @@ export default class RxDBExtension {
         badgeStyle: 'display:none'
       })
       throw Error(t('rxdb.createDbError'))
-    }
-  }
-
-  public getDB (): RxDatabase {
-    if (this.localDB !== undefined) {
-      return this.localDB
-    } else {
-      Notify.create({
-        message: t('rxdb.getDBError'),
-        position: 'top',
-        type: 'negative',
-        textColor: 'white',
-        badgeStyle: 'display:none'
-      })
-      throw Error(t('rxdb.getDBError'))
-    }
-  }
-
-  public getCollection (name?: string): RxCollection | undefined {
-    if (name !== undefined) {
-      // eslint-disable-next-line no-prototype-builtins
-      if (name !== null && this.collections.hasOwnProperty(name)) {
-        const collection = this.collections[name]
-        return collection
-      } else {
-        Notify.create({
-          message: t('rxdb.getCollectionError'),
-          position: 'top',
-          type: 'negative',
-          textColor: 'white',
-          badgeStyle: 'display:none'
-        })
-        throw Error(t('rxdb.getCollectionError'))
-      }
     }
   }
 }
