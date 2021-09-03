@@ -11,28 +11,28 @@ import { Store, useStore } from 'vuex'
 import { Notify } from 'quasar'
 import { SubscriptionClient } from 'subscriptions-transport-ws'
 
-import QueryBuilder from '../interfaces/QueryBuilder'
+import { QueryBuilder } from '../interfaces/QueryBuilder'
 import Dictionary from '../interfaces/Dictionary'
 
 import i18n from '../injects/i18n'
-const {
-  global: { t }
-} = i18n()
+const _i18n = i18n()
 
 import prompts from '../injects/prompts'
+import { setupQuery, subscribe } from './utils'
+import { RxGraphQLReplicationState } from 'rxdb/dist/types/plugins/replication-graphql'
 
 export class RxDBExtension {
-  private queryBuilders: QueryBuilder[]
+  private queryBuilders: Dictionary<QueryBuilder>
   private schema: Dictionary<RxJsonSchema<unknown>>
   private x_hasura_role?: string
   private localDB?: RxDatabase<Dictionary<RxCollection>>
   private collections: Dictionary<RxCollection> = {} // NOT SO SURE ABOUT THIS TYPING
   private collectionsName: string[] = []
   private $store: Store<unknown>
-  private replicationStates: any[] = []
-  private wsClient: SubscriptionClient
+  private replicationStates: RxGraphQLReplicationState<any>[] = []
+  private wsClient?: SubscriptionClient
 
-  constructor(querys: QueryBuilder[], collectionSchema: Dictionary<RxJsonSchema<unknown>>, hasura_role: string) {
+  constructor(querys: Dictionary<QueryBuilder>, collectionSchema: Dictionary<RxJsonSchema<unknown>>, hasura_role: string) {
     this.queryBuilders = querys
     this.schema = collectionSchema
     this.x_hasura_role = hasura_role
@@ -67,13 +67,13 @@ export class RxDBExtension {
       return this.localDB
     } else {
       Notify.create({
-        message: t('rxdb.createDbError'),
+        message: _i18n.global.t('rxdb.createDbError'),
         position: 'top',
         type: 'negative',
         textColor: 'white',
         badgeStyle: 'display:none'
       })
-      throw Error(t('rxdb.createDbError'))
+      throw Error(_i18n.global.t('rxdb.createDbError'))
     }
   }
 
@@ -82,13 +82,13 @@ export class RxDBExtension {
       return this.localDB
     } else {
       Notify.create({
-        message: t('rxdb.getDBError'),
+        message: _i18n.global.t('rxdb.getDBError'),
         position: 'top',
         type: 'negative',
         textColor: 'white',
         badgeStyle: 'display:none'
       })
-      throw Error(t('rxdb.getDBError'))
+      throw Error(_i18n.global.t('rxdb.getDBError'))
     }
   }
 
@@ -101,13 +101,13 @@ export class RxDBExtension {
       }
     }
     Notify.create({
-      message: t('rxdb.getCollectionError'),
+      message: _i18n.global.t('rxdb.getCollectionError'),
       position: 'top',
       type: 'negative',
       textColor: 'white',
       badgeStyle: 'display:none'
     })
-    throw Error(t('rxdb.getCollectionError'))
+    throw Error(_i18n.global.t('rxdb.getCollectionError'))
   }
 
   public initReplication (): void {
@@ -142,15 +142,40 @@ export class RxDBExtension {
             }
           }
         )
+        for (const name of this.collectionsName) {
+          const collection = this.getCollection(name)
+          const { pushQueryBuilder, pullQueryBuilder, subQuery } = setupQuery(this.queryBuilders, name)
+          if (collection) {
+            const replicationState = collection.syncGraphQL({
+              url: server_graphql_base_url,
+              headers,
+              pull: {
+                queryBuilder: pullQueryBuilder,
+                modifier: (doc: { id: unknown }) => {
+                  return typeof doc.id === 'number' ? { ...doc, id: doc.id.toString() } : doc
+                }
+              },
+              push: {
+                batchSize,
+                queryBuilder: pushQueryBuilder
+              },
+              live: true,
+              liveInterval: 1000 * 60 * 60,
+              deletedFlag: 'deleted'
+            })
+            this.replicationStates.push(replicationState)
+            subscribe(replicationState, subQuery, this.wsClient, _i18n)
+          }
+        }
       } else {
         Notify.create({
-          message: t('rxdb.tokenNotProvided'),
+          message: _i18n.global.t('rxdb.tokenNotProvided'),
           position: 'top',
           type: 'negative',
           textColor: 'white',
           badgeStyle: 'display:none'
         })
-        throw Error(t('rxdb.tokenNotProvided'))
+        throw Error(_i18n.global.t('rxdb.tokenNotProvided'))
       }
     }
   }
@@ -160,7 +185,7 @@ export class RxDBExtension {
 export default class RxDBExtensionSingletonFactory {
   private static instance: RxDBExtension
 
-  public static getInstance(querys: QueryBuilder[], collectionSchema: Dictionary<RxJsonSchema<unknown>>, hasura_role: string): RxDBExtension {
+  public static getInstance(querys: Dictionary<QueryBuilder>, collectionSchema: Dictionary<RxJsonSchema<unknown>>, hasura_role: string): RxDBExtension {
     if (!RxDBExtensionSingletonFactory.instance) {
       RxDBExtensionSingletonFactory.instance = new RxDBExtension(querys, collectionSchema, hasura_role)
     }

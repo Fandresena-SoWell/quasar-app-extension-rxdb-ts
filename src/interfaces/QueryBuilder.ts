@@ -1,12 +1,7 @@
-import { RxDocument } from 'rxdb'
+import { RxGraphQLReplicationQueryBuilder } from 'rxdb'
 
-interface QueryBuilderResult {
-  query: string,
-  variables: Record<string, RxDocument>[]
+export interface QueryBuilder {
+  push: RxGraphQLReplicationQueryBuilder,
+  pull: RxGraphQLReplicationQueryBuilder,
+  sub: string
 }
-
-interface QueryBuilder {
-  (doc: RxDocument): QueryBuilderResult
-}
-
-export default QueryBuilder
