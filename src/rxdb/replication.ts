@@ -9,6 +9,7 @@ import {
 
 import { Store, useStore } from 'vuex'
 import { Notify } from 'quasar'
+import { SubscriptionClient } from 'subscriptions-transport-ws'
 
 import QueryBuilder from '../interfaces/QueryBuilder'
 import Dictionary from '../interfaces/Dictionary'
@@ -23,11 +24,13 @@ import prompts from '../injects/prompts'
 export class RxDBExtension {
   private queryBuilders: QueryBuilder[]
   private schema: Dictionary<RxJsonSchema<unknown>>
-  private x_hasura_role: string
+  private x_hasura_role?: string
   private localDB?: RxDatabase<Dictionary<RxCollection>>
   private collections: Dictionary<RxCollection> = {} // NOT SO SURE ABOUT THIS TYPING
   private collectionsName: string[] = []
   private $store: Store<unknown>
+  private replicationStates: any[] = []
+  private wsClient: SubscriptionClient
 
   constructor(querys: QueryBuilder[], collectionSchema: Dictionary<RxJsonSchema<unknown>>, hasura_role: string) {
     this.queryBuilders = querys
@@ -71,6 +74,51 @@ export class RxDBExtension {
         badgeStyle: 'display:none'
       })
       throw Error(t('rxdb.createDbError'))
+    }
+  }
+
+  public initReplication (): void {
+    if (this.replicationStates.length === 0) {
+      const {
+        server_graphql_base_url_subscription,
+        server_graphql_base_url,
+        vuex_getters_token
+      } = prompts()
+
+      // eslint-disable-next-line
+      const token: string = this.$store.getters[vuex_getters_token]
+
+      if (token) {
+        const batchSize = 5
+        const headers: Dictionary<string> = {
+          Authorization: `Bearer ${token}`
+        }
+        if (this.x_hasura_role !== undefined) {
+          headers['x-hasura-role'] = this.x_hasura_role
+        }
+
+        this.wsClient = new SubscriptionClient(
+          server_graphql_base_url_subscription,
+          {
+            reconnect: true,
+            connectionParams: {
+              headers: headers
+            },
+            connectionCallback: () => {
+              console.log('SubscriptionClient.connectionCallback:')
+            }
+          }
+        )
+      } else {
+        Notify.create({
+          message: t('rxdb.tokenNotProvided'),
+          position: 'top',
+          type: 'negative',
+          textColor: 'white',
+          badgeStyle: 'display:none'
+        })
+        throw Error(t('rxdb.tokenNotProvided'))
+      }
     }
   }
 }
