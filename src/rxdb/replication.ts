@@ -73,4 +73,37 @@ export default class RxDBExtension {
       throw Error(t('rxdb.createDbError'))
     }
   }
+
+  public getDB (): RxDatabase {
+    if (this.localDB !== undefined) {
+      return this.localDB
+    } else {
+      Notify.create({
+        message: t('rxdb.getDBError'),
+        position: 'top',
+        type: 'negative',
+        textColor: 'white',
+        badgeStyle: 'display:none'
+      })
+      throw Error(t('rxdb.getDBError'))
+    }
+  }
+
+  public getCollection (name?: string): RxCollection {
+    if (name !== undefined) {
+      // eslint-disable-next-line no-prototype-builtins
+      if (name !== null && this.collections.hasOwnProperty(name)) {
+        const collection = this.collections[name]
+        return collection
+      }
+    }
+    Notify.create({
+      message: t('rxdb.getCollectionError'),
+      position: 'top',
+      type: 'negative',
+      textColor: 'white',
+      badgeStyle: 'display:none'
+    })
+    throw Error(t('rxdb.getCollectionError'))
+  }
 }
