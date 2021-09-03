@@ -20,8 +20,6 @@ const {
 
 import prompts from '../injects/prompts'
 
-const store: Store<unknown> = useStore()
-
 export class RxDBExtension {
   private queryBuilders: QueryBuilder[]
   private schema: Dictionary<RxJsonSchema<unknown>>
@@ -29,17 +27,19 @@ export class RxDBExtension {
   private localDB?: RxDatabase<Dictionary<RxCollection>>
   private collections: Dictionary<RxCollection> = {} // NOT SO SURE ABOUT THIS TYPING
   private collectionsName: string[] = []
+  private $store: Store<unknown>
 
   constructor(querys: QueryBuilder[], collectionSchema: Dictionary<RxJsonSchema<unknown>>, hasura_role: string) {
     this.queryBuilders = querys
     this.schema = collectionSchema
     this.x_hasura_role = hasura_role
+    this.$store = useStore()
   }
 
   public async createDB (): Promise<RxDatabase> {
     const { vuex_getters_db_name } = prompts()
     // eslint-disable-next-line
-    const name: string = store.getters[vuex_getters_db_name]
+    const name: string = this.$store.getters[vuex_getters_db_name]
     if (name) {
       if (this.localDB === undefined) {
         console.log('DatabaseService: creating database..')
