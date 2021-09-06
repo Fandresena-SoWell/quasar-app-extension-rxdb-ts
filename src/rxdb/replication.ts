@@ -179,11 +179,33 @@ export class RxDBExtension {
       }
     }
   }
+
+  public async stopReplication(): Promise<void> {
+    if (this.replicationStates.length && this.wsClient !== undefined) {
+      for (const replication of this.replicationStates) {
+        await replication.cancel()
+      }
+      this.wsClient.close()
+      this.collectionsName = []
+      this.replicationStates = []
+      delete this.wsClient
+      delete this.localDB
+    } else {
+      Notify.create({
+        message: _i18n.global.t('rxdb.stopReplicationError'),
+        position: 'top',
+        type: 'negative',
+        textColor: 'white',
+        badgeStyle: 'display:none'
+      })
+      throw Error(_i18n.global.t('rxdb.stopReplicationError'))
+    }
+  }
 }
 
 // We use a SingletonFactory to make sure we only have one instance of the RxDBExtension running
 export default class RxDBExtensionSingletonFactory {
-  private static instance: RxDBExtension
+  private static instance?: RxDBExtension
 
   public static getInstance(querys: Dictionary<QueryBuilder>, collectionSchema: Dictionary<RxJsonSchema<unknown>>, hasura_role: string): RxDBExtension {
     if (!RxDBExtensionSingletonFactory.instance) {
@@ -191,5 +213,9 @@ export default class RxDBExtensionSingletonFactory {
     }
 
     return RxDBExtensionSingletonFactory.instance
+  }
+
+  public static clearInstance(): void {
+    delete RxDBExtensionSingletonFactory.instance
   }
 }
